@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ELBRAD – Fahrradverleih Hamburg</title>
+<meta name="description" content="ELBRAD ist ein fiktiver Fahrradverleih in Hamburg. Studienprojekt der Kunstschule Wandsbek, Variante A.">
+<!--
+  ELBRAD · Variante A (Urban)
+  Studienprojekt der Kunstschule Wandsbek. Keine offizielle Seite.
+
+  Bilder: Ausschnitte aus dem Entwurf "Variante A", der für dieses Projekt erstellt wurde.
+  Schriften: Barlow / Barlow Condensed (SIL Open Font License 1.1), lokal eingebettet,
+  damit beim Laden keine Anfragen an Schrift-Server von Dritten entstehen.
+  Wetter: Open-Meteo (CC BY 4.0). Abruf im Skript am Ende der Datei, Funktion loadWeather().
+-->
+<style>
+@font-face{font-family:"Barlow Condensed";font-style:italic;font-weight:800;font-display:swap;src:url({{FONT_BC800I}}) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:700;font-display:swap;src:url({{FONT_BC700}}) format("woff2")}
+@font-face{font-family:"Barlow";font-style:normal;font-weight:400;font-display:swap;src:url({{FONT_B400}}) format("woff2")}
+@font-face{font-family:"Barlow";font-style:normal;font-weight:600;font-display:swap;src:url({{FONT_B600}}) format("woff2")}
+
+/* Layout: asymmetric yellow hero cut diagonally into the photo, then full-width
+   bands alternating black (weather), white (bikes), yellow (steps), black (footer). */
+:root{
+  --acid:#E8FF1A;      /* signal yellow, brand colour */
+  --ink:#10100E;       /* near-black, warm */
+  --paper:#FFFFFF;
+  --mist:#C9C9C1;      /* secondary text on ink */
+  --steel:#4B4B45;     /* secondary text on paper */
+  --rule:#DADAD3;      /* dividers on paper */
+  --rule-dark:rgba(255,255,255,.22);
+
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+
+  --gutter-l:max(16px, env(safe-area-inset-left, 0px), 4vw);
+  --gutter-r:max(16px, env(safe-area-inset-right, 0px), 4vw);
+  --max:1320px;
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1.0625rem;line-height:1.5;overflow-x:hidden}
+img{display:block;max-width:100%;height:auto}
+h1,h2,h3{margin:0;font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;line-height:.9;letter-spacing:-.005em;text-wrap:balance}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+a{color:inherit}
+[hidden]{display:none!important}
+
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* Keyboard focus: dark ring on light grounds, yellow ring on dark grounds */
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.on-dark :focus-visible{outline-color:var(--acid)}
+
+.skip-link{position:absolute;left:16px;top:-100px;z-index:100;background:var(--ink);color:var(--paper);padding:.75rem 1rem;font-weight:600;text-decoration:none}
+.skip-link:focus{top:16px}
+.skip-link:focus-visible{outline-color:var(--acid)}
+
+.wrap{max-width:var(--max);margin-inline:auto;padding-left:var(--gutter-l);padding-right:var(--gutter-r)}
+section[id]{scroll-margin-top:12px}
+
+/* ---------- Buttons & tags ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.7em;min-height:48px;padding:.55em 1.25em;border:0;border-radius:0;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1;letter-spacing:.01em;text-decoration:none;cursor:pointer}
+.btn:hover{background:#2D2D28}
+.btn svg{width:1.05em;height:1.05em;flex:none}
+.btn-hero{font-size:clamp(1.35rem,1.1rem + .9vw,1.75rem);padding:.65em 1.2em .65em 1.3em}
+@media (prefers-reduced-motion:no-preference){
+  .btn svg{transition:transform .18s ease}
+  .btn:hover svg{transform:translateX(4px)}
+}
+.slant-tag{display:inline-block;padding:.32em 1.1em .3em .9em;clip-path:polygon(.55em 0,100% 0,calc(100% - .55em) 100%,0 100%);font-family:var(--display);font-style:italic;font-weight:800;line-height:1;white-space:nowrap}
+
+/* ---------- Header ---------- */
+.header-band{background:var(--acid);color:var(--ink)}
+.site-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem;padding-block:1rem .2rem}
+.site-header .logo{order:1}
+.site-header .btn-nav{order:2}
+.site-header nav{order:3;flex-basis:100%}
+.main-nav{display:contents}
+.logo{display:inline-block;font-family:var(--display);font-style:italic;font-weight:800;font-size:2.4rem;line-height:.85;letter-spacing:-.01em;text-decoration:none;padding-bottom:.18em;background:linear-gradient(var(--ink),var(--ink)) left bottom/100% .12em no-repeat;transform:skewX(-6deg)}
+.main-nav ul{display:flex;flex-wrap:wrap;gap:0 1.5rem}
+.main-nav a{display:inline-block;padding-block:.6rem;font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1;text-decoration:none;background:linear-gradient(currentColor,currentColor) left calc(100% - .25rem)/0 2px no-repeat}
+.main-nav a:hover{background-size:100% 2px}
+@media (prefers-reduced-motion:no-preference){.main-nav a{transition:background-size .2s ease}}
+.btn-nav{font-size:1.25rem;min-height:44px;padding-inline:1em}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;background:var(--acid);color:var(--ink);overflow:hidden}
+.hero-content{display:flex;flex-direction:column;align-items:flex-start;gap:1.4rem;padding-block:1.6rem 2.6rem}
+.hero h1{font-size:clamp(3.4rem,16.5vw,7.25rem);line-height:.84;letter-spacing:-.012em}
+.hero h1 span{display:block}
+.hero-sub{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,1.05rem + 1vw,1.75rem);line-height:1.15}
+.hero-actions{display:flex;flex-direction:column;align-items:flex-start;gap:1rem;margin-top:.3rem}
+.price-from{background:var(--paper);color:var(--ink);font-size:clamp(1.45rem,1.2rem + .9vw,1.9rem)}
+.hero-media{position:relative;margin:0;clip-path:polygon(0 11%,100% 0,100% 100%,0 100%);margin-top:-1.5rem}
+.hero-media img{width:100%;aspect-ratio:1/0.92;object-fit:cover;object-position:40% 0%}
+
+@media (min-width:1024px){
+  .hero{min-height:clamp(620px,58vw,780px)}
+  .hero-media{position:absolute;inset:0 0 0 max(33%, calc(50% - 200px));margin:0;clip-path:polygon(25% 0,100% 0,100% 100%,0 100%)}
+  .hero-media img{height:100%;aspect-ratio:auto;object-position:30% 0%}
+  body{position:relative}
+  .header-band{position:absolute;inset:0 0 auto;z-index:3;background:transparent}
+  .site-header{padding-block:1.6rem 0;flex-wrap:nowrap}
+  .main-nav{display:flex;align-items:center;gap:1.6rem;padding:.5rem .55rem .5rem 2.4rem;background:var(--acid);clip-path:polygon(1.5rem 0,100% 0,100% 100%,0 100%)}
+  .site-header nav{flex-basis:auto}
+  .site-header .logo,.site-header nav,.site-header .btn-nav{order:0}
+  .hero-content{position:relative;z-index:1;width:min(47%,40rem);padding-block:8.4rem 4rem}
+  .hero h1{font-size:clamp(5.2rem,7.4vw,7.6rem)}
+}
+@media (min-width:1024px) and (max-width:1199px){
+  .hero-sub{max-width:16em}
+}
+
+/* ---------- Weather ---------- */
+.weather{background:var(--ink);color:var(--paper)}
+.weather .wrap{display:grid;gap:1.5rem 2.5rem;padding-block:2rem 1.6rem}
+.weather-head{display:flex;flex-direction:column;align-items:flex-start;gap:.7rem}
+.weather h2{font-size:clamp(2.5rem,2rem + 2.2vw,3.6rem);line-height:.86}
+.weather h2:focus-visible{outline-color:var(--acid)}
+.live-tag{background:var(--acid);color:var(--ink);font-size:1.1rem}
+.weather-body{display:grid;gap:1rem;min-width:0}
+.weather-status{font-family:var(--display);font-weight:700;font-size:1.55rem;line-height:1.2}
+.weather-status.is-error{color:var(--acid)}
+.weather-error{display:flex;flex-wrap:wrap;align-items:center;gap:1rem}
+.btn-retry{background:var(--acid);color:var(--ink);font-size:1.25rem}
+.btn-retry:hover{background:#F4FF8A}
+.weather-stats{display:grid;gap:0}
+.stat{display:grid;grid-template-columns:2.6rem minmax(0,1fr);grid-template-areas:"icon value" "icon label";align-items:center;column-gap:1rem;row-gap:.25rem;padding-block:.9rem;border-top:1px solid var(--rule-dark);min-width:0}
+.stat svg{grid-area:icon}
+.stat-value{grid-area:value}
+.stat-label{grid-area:label}
+.stat-hour{display:block}
+.stat:first-child{border-top:0}
+.stat svg{width:2.4rem;height:2.4rem;color:var(--acid)}
+.stat-value{font-family:var(--display);font-style:italic;font-weight:800;font-size:clamp(2.3rem,1.9rem + 1.6vw,3.3rem);line-height:.95;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat-value.is-na{font-size:1.5rem;font-style:normal;font-weight:700;color:var(--mist);white-space:normal}
+.stat-label{color:var(--mist);font-size:1rem;line-height:1.3;hyphens:manual;overflow-wrap:anywhere}
+.stat-label strong{color:var(--paper);font-weight:600}
+.weather-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem 1.5rem;padding-top:1rem;border-top:1px solid var(--rule-dark);font-size:.95rem;color:var(--mist)}
+.weather-meta strong{color:var(--paper);font-weight:600}
+.weather-meta a{color:var(--acid);text-underline-offset:.18em}
+.weather-meta a:hover{text-decoration-thickness:2px}
+
+@media (min-width:640px){
+  .weather-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stat{grid-template-columns:minmax(0,1fr);grid-template-areas:"icon" "value" "label";align-items:start;row-gap:.5rem;padding:.2rem 1.4rem;border-top:0;border-left:1px solid var(--rule-dark)}
+  .stat:first-child{border-left:0;padding-left:0}
+}
+@media (min-width:1024px){
+  .weather .wrap{grid-template-columns:minmax(14rem,1fr) 3.2fr;align-items:center;padding-block:2.4rem 1.6rem}
+  .stat{grid-template-columns:2.6rem minmax(0,1fr);grid-template-areas:"icon value" "icon label";row-gap:.3rem}
+  .stat svg{margin-top:.2rem}
+}
+
+/* ---------- Bikes ---------- */
+.section-title{font-size:clamp(2.6rem,1.8rem + 3.6vw,5rem)}
+.section-title::after{content:"";display:block;width:clamp(5rem,12vw,9rem);height:.16em;margin-top:.2em;transform:skewX(-20deg);transform-origin:left}
+.bikes{padding-block:clamp(3rem,6vw,5rem)}
+.bikes .section-title::after{background:var(--acid)}
+.bike-list{display:grid;margin-top:2.4rem}
+.bike{display:flex;flex-direction:column;align-items:center;gap:.9rem;padding-block:1.8rem;border-top:1px solid var(--rule);text-align:center}
+.bike:first-child{border-top:0;padding-top:0}
+.bike img{width:100%;max-width:21rem;aspect-ratio:620/388;object-fit:contain}
+.bike h3{font-size:clamp(2rem,1.7rem + 1.2vw,2.6rem)}
+.bike .price{background:var(--acid);color:var(--ink);font-size:1.75rem}
+@media (min-width:760px){
+  .bike-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bike{border-top:0;border-left:1px solid var(--rule);padding:0 1.5rem}
+  .bike img{max-width:26rem}
+  .bike:first-child{border-left:0;padding-left:0}
+  .bike:last-child{padding-right:0}
+}
+
+/* ---------- Steps ---------- */
+.steps{background:var(--acid);padding-block:clamp(3rem,6vw,4.5rem)}
+.steps .section-title::after{background:var(--ink)}
+.step-list{display:grid;gap:1.1rem;margin-top:2.2rem;counter-reset:step}
+.step{display:flex;align-items:center;gap:1.1rem}
+.step-icon{display:grid;place-items:center;flex:none;width:4.6rem;height:4rem;background:var(--ink);color:var(--paper)}
+.step-icon svg{width:2.3rem;height:2.3rem}
+.step h3{font-size:clamp(1.9rem,1.6rem + 1.1vw,2.5rem);line-height:.9}
+@media (min-width:760px){
+  .step-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:2rem}
+  .step{position:relative}
+  .step:not(:last-child)::after{content:"";position:absolute;right:-1.25rem;top:50%;width:.7rem;height:.7rem;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:translateY(-50%) rotate(-45deg)}
+}
+
+/* ---------- Footer ---------- */
+.site-footer{background:var(--ink);color:var(--paper);text-align:center}
+.site-footer .wrap{display:grid;gap:.4rem;padding-block:1.4rem}
+.site-footer p:first-child{font-weight:600}
+.site-footer .small{font-size:.875rem;color:var(--mist)}
+
+/* ---------- Booking dialog ---------- */
+.booking{width:min(34rem,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:0;background:var(--paper);color:var(--ink);box-shadow:12px 12px 0 var(--acid)}
+.booking::backdrop{background:rgba(16,16,14,.72)}
+.booking-inner{display:grid;gap:1.1rem;padding:1.6rem 1.4rem 1.5rem}
+.booking-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.booking h2{font-size:2.4rem}
+.icon-btn{display:grid;place-items:center;flex:none;width:44px;height:44px;margin:-.4rem -.4rem 0 0;border:2px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.icon-btn:hover{background:var(--acid)}
+.icon-btn svg{width:1.2rem;height:1.2rem}
+.demo-note{padding:.85rem 1rem;background:var(--acid);font-size:1rem;line-height:1.45}
+.demo-note strong{display:block;font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1.1;margin-bottom:.15rem}
+.booking fieldset{margin:0;padding:0;border:0;display:grid;gap:.6rem}
+.booking legend{padding:0;margin-bottom:.6rem;font-weight:600}
+.choice{display:flex;align-items:center;gap:.85rem;padding:.75rem .95rem;border:2px solid var(--ink);cursor:pointer}
+.choice:hover{background:#F7FFC2}
+.choice:has(input:checked){background:var(--acid)}
+.choice input{width:1.25rem;height:1.25rem;margin:0;flex:none;accent-color:var(--ink)}
+.choice-name{font-family:var(--display);font-style:italic;font-weight:800;font-size:1.45rem;text-transform:uppercase;line-height:1}
+.choice-price{margin-left:auto;font-weight:600;white-space:nowrap}
+.booking-actions{display:flex;flex-wrap:wrap;gap:.75rem}
+.btn-ghost{background:var(--paper);color:var(--ink);border:2px solid var(--ink)}
+.btn-ghost:hover{background:#EFEFEA}
+.booking-result{font-weight:600;line-height:1.4}
+.booking-result:empty{display:none}
+.booking-result:not(:empty){padding:.85rem 1rem;border-left:6px solid var(--ink);background:#F2F2EC}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body id="top">
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+<header class="header-band">
+  <div class="wrap site-header">
+    <a class="logo" href="#top" aria-label="ELBRAD, zum Seitenanfang">ELBRAD</a>
+    <div class="main-nav">
+      <nav aria-label="Hauptnavigation">
+        <ul>
+          <li><a href="#raeder">Räder</a></li>
+          <li><a href="#so-gehts">So geht’s</a></li>
+          <li><a href="#preise">Preise</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="btn btn-nav" data-open-booking aria-haspopup="dialog">Rad buchen</button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="hero-content">
+      <h1 id="hero-title"><span>Hamburg</span> <span>auf zwei</span> <span>Rädern.</span></h1>
+      <p class="hero-sub">Dein Rad. Dein Tempo. Deine Stadt.</p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-hero" data-open-booking aria-haspopup="dialog">
+          Jetzt Rad buchen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="slant-tag price-from">Ab 12&nbsp;€ / Tag</p>
+      </div>
+    </div>
+  </div>
+  <figure class="hero-media">
+    <img src="{{IMG_HERO}}" width="867" height="934" fetchpriority="high"
+         alt="Eine Frau fährt auf einem gelben ELBRAD-Citybike mit Frontkorb über eine Holzpromenade am Hamburger Hafen. Im Hintergrund stehen die Elbphilharmonie und Hafenkräne unter blauem Himmel.">
+  </figure>
+</section>
+
+<section class="weather on-dark" id="wetter" aria-labelledby="weather-title">
+  <div class="wrap">
+    <div class="weather-head">
+      <h2 id="weather-title" tabindex="-1">Hamburg heute</h2>
+      <p class="slant-tag live-tag">Live-Wetter</p>
+    </div>
+
+    <div class="weather-body">
+      <p class="weather-status" id="weather-status" role="status" aria-live="polite">Wetterdaten werden geladen …</p>
+      <div class="weather-error" id="weather-error" hidden>
+        <button type="button" class="btn btn-retry" id="weather-retry">Erneut versuchen</button>
+      </div>
+      <noscript><p class="weather-status">Für die Wetterdaten wird JavaScript benötigt.</p></noscript>
+
+      <ul class="weather-stats" id="weather-stats" hidden>
+        <li class="stat">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M13 5.5a3 3 0 0 1 6 0v12.2a6 6 0 1 1-6 0Z"/><path d="M16 12v9"/><circle cx="16" cy="22.5" r="2" fill="currentColor"/></svg>
+          <p class="stat-label">Temperatur</p>
+          <p class="stat-value" id="w-temp">–</p>
+        </li>
+        <li class="stat">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M16 4.5S8.5 13 8.5 19a7.5 7.5 0 0 0 15 0C23.5 13 16 4.5 16 4.5Z"/><path d="M12.5 20a3.5 3.5 0 0 0 3.5 3.5" stroke-linecap="round"/></svg>
+          <p class="stat-label">Niederschlags&shy;wahrscheinlichkeit<span class="stat-hour" id="w-precip-hour"></span></p>
+          <p class="stat-value" id="w-precip">–</p>
+        </li>
+        <li class="stat">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12h15.5a3.5 3.5 0 1 0-3.5-3.5"/><path d="M4 18h21a3.5 3.5 0 1 1-3.5 3.5"/><path d="M4 24h9"/></svg>
+          <p class="stat-label">Wind</p>
+          <p class="stat-value" id="w-wind">–</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="weather-meta">
+      <p>Stand: <strong id="w-time">–</strong></p>
+      <p><a href="https://open-meteo.com/" target="_blank" rel="noopener">Wetterdaten: Open-Meteo</a>
+         · Lizenz: <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">CC BY 4.0</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="bikes" id="raeder" aria-labelledby="bikes-title">
+  <div class="wrap">
+    <h2 class="section-title" id="bikes-title">Dein Rad für die Stadt</h2>
+    <ul class="bike-list" id="preise" aria-label="Räder und Preise">
+      <li class="bike">
+        <img src="{{IMG_CITY}}" width="620" height="388" loading="lazy" alt="Gelbes ELBRAD-Citybike mit tiefem Einstieg, Gepäckträger und Frontkorb.">
+        <h3>Citybike</h3>
+        <p class="slant-tag price">12&nbsp;€ / Tag</p>
+      </li>
+      <li class="bike">
+        <img src="{{IMG_EBIKE}}" width="620" height="388" loading="lazy" alt="Schwarzes ELBRAD-E-Bike mit Akku am Unterrohr und Gepäckträger.">
+        <h3>E-Bike</h3>
+        <p class="slant-tag price">25&nbsp;€ / Tag</p>
+      </li>
+      <li class="bike">
+        <img src="{{IMG_TOUR}}" width="620" height="388" loading="lazy" alt="Olivgrünes ELBRAD-Tourenrad mit Diamantrahmen, Gepäckträger und Kettenschaltung.">
+        <h3>Tourenrad</h3>
+        <p class="slant-tag price">18&nbsp;€ / Tag</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="steps" id="so-gehts" aria-labelledby="steps-title">
+  <div class="wrap">
+    <h2 class="section-title" id="steps-title">In drei Schritten unterwegs</h2>
+    <ol class="step-list">
+      <li class="step">
+        <span class="step-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="20.5" r="5"/><circle cx="24.5" cy="20.5" r="5"/><path d="M7.5 20.5 12 11h9.5l3 9.5M12 11l4.5 9.5h3l2-9.5M10.5 8h4M19.5 8h3"/></svg></span>
+        <h3>Rad wählen</h3>
+      </li>
+      <li class="step">
+        <span class="step-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M16 28.5s-8.5-8.2-8.5-15a8.5 8.5 0 0 1 17 0c0 6.8-8.5 15-8.5 15Z"/><circle cx="16" cy="13.5" r="3.2"/></svg></span>
+        <h3>Abholen</h3>
+      </li>
+      <li class="step">
+        <span class="step-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M10 6.5v19L25 16Z"/></svg></span>
+        <h3>Losfahren</h3>
+      </li>
+    </ol>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer on-dark">
+  <div class="wrap">
+    <p>Studienprojekt der Kunstschule Wandsbek, keine offizielle Seite</p>
+    <p class="small">ELBRAD ist eine fiktive Marke. Buchungen sind nicht möglich.</p>
+  </div>
+</footer>
+
+<dialog class="booking" id="booking" aria-labelledby="booking-title" aria-describedby="booking-note">
+  <div class="booking-inner">
+    <div class="booking-top">
+      <h2 id="booking-title">Rad buchen</h2>
+      <button type="button" class="icon-btn" data-close-booking aria-label="Dialog schließen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>
+      </button>
+    </div>
+    <p class="demo-note" id="booking-note"><strong>Demo im Studienprojekt</strong>Hier wird kein Rad gebucht. Du kannst eine Auswahl ausprobieren. Die Seite fragt keine persönlichen Daten und keine Zahlungsdaten ab.</p>
+    <form id="booking-form" novalidate>
+      <fieldset>
+        <legend>Welches Rad möchtest du?</legend>
+        <label class="choice"><input type="radio" name="bike" id="bike-city" value="Citybike" data-price="12&nbsp;€ / Tag"><span class="choice-name">Citybike</span><span class="choice-price">12&nbsp;€ / Tag</span></label>
+        <label class="choice"><input type="radio" name="bike" id="bike-ebike" value="E-Bike" data-price="25&nbsp;€ / Tag"><span class="choice-name">E-Bike</span><span class="choice-price">25&nbsp;€ / Tag</span></label>
+        <label class="choice"><input type="radio" name="bike" id="bike-tour" value="Tourenrad" data-price="18&nbsp;€ / Tag"><span class="choice-name">Tourenrad</span><span class="choice-price">18&nbsp;€ / Tag</span></label>
+      </fieldset>
+    </form>
+    <p class="booking-result" id="booking-result" role="status" aria-live="polite"></p>
+    <div class="booking-actions">
+      <button type="submit" form="booking-form" class="btn" id="booking-confirm">Auswahl bestätigen</button>
+      <button type="button" class="btn btn-ghost" data-close-booking>Schließen</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Wetter: Open-Meteo =================
+     Der Abruf passiert in loadWeather(). Er läuft bei jedem Seitenaufruf
+     und bei "Erneut versuchen". Es gibt keine Beispiel- oder Ersatzwerte. */
+  var WEATHER_URL = "https://api.open-meteo.com/v1/forecast?latitude=53.55&longitude=9.99&current=temperature_2m,wind_speed_10m&hourly=precipitation_probability&forecast_days=1&timezone=Europe%2FBerlin";
+  var TIMEOUT_MS = 10000;
+  var NA = "Nicht verfügbar";
+
+  var el = {
+    status: document.getElementById("weather-status"),
+    error: document.getElementById("weather-error"),
+    retry: document.getElementById("weather-retry"),
+    stats: document.getElementById("weather-stats"),
+    heading: document.getElementById("weather-title"),
+    temp: document.getElementById("w-temp"),
+    precip: document.getElementById("w-precip"),
+    precipHour: document.getElementById("w-precip-hour"),
+    wind: document.getElementById("w-wind"),
+    time: document.getElementById("w-time")
+  };
+
+  var fmtOneDecimal = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var fmtInteger = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 });
+  var NBSP = "\u00A0";
+
+  function isNumber(v) { return typeof v === "number" && Number.isFinite(v); }
+
+  // Rundet und verhindert "-0,0" bei Werten knapp unter null.
+  function formatOneDecimal(v) {
+    var r = Math.round(v * 10) / 10;
+    if (r === 0) r = 0;
+    return fmtOneDecimal.format(r);
+  }
+
+  // "2026-11-05T15:45" -> {date:"05.11.2026", hm:"15:45", hourKey:"2026-11-05T15"}
+  // Open-Meteo liefert die Zeit mit timezone=Europe/Berlin bereits in Berliner Ortszeit.
+  function parseLocalTime(s) {
+    if (typeof s !== "string") return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/.exec(s);
+    if (!m) return null;
+    return { date: m[3] + "." + m[2] + "." + m[1], hm: m[4] + ":" + m[5], hour: m[4], hourKey: m[1] + "-" + m[2] + "-" + m[3] + "T" + m[4] };
+  }
+
+  function unitOk(units, key, expected) {
+    // Fehlt die Einheitenangabe, gilt die Standardeinheit der API (°C, km/h, %).
+    if (!units || typeof units !== "object" || !(key in units)) return true;
+    return units[key] === expected;
+  }
+
+  function setValue(node, text) {
+    node.textContent = text;
+    node.classList.toggle("is-na", text === NA);
+  }
+
+  function setState(state) {
+    var loading = state === "loading", error = state === "error", ok = state === "ok";
+    el.stats.hidden = !ok;
+    el.error.hidden = !error;
+    el.status.classList.toggle("sr-only", ok);
+    el.status.classList.toggle("is-error", error);
+    el.status.parentNode.setAttribute("aria-busy", loading ? "true" : "false");
+    if (loading) el.status.textContent = "Wetterdaten werden geladen …";
+    if (error) el.status.textContent = "Wetterdaten gerade nicht erreichbar.";
+    if (!ok) el.time.textContent = loading ? "–" : NA;
+  }
+
+  function render(data) {
+    var current = data && typeof data === "object" ? data.current : null;
+    var units = data && data.current_units;
+    var hourly = data && data.hourly;
+    var hourlyUnits = data && data.hourly_units;
+    var used = {};
+
+    // Temperatur
+    var t = current && current.temperature_2m;
+    var tempText = isNumber(t) && unitOk(units, "temperature_2m", "°C") ? formatOneDecimal(t) + NBSP + "°C" : NA;
+    setValue(el.temp, tempText);
+    used.temperature_2m = tempText === NA ? null : t;
+
+    // Wind
+    var w = current && current.wind_speed_10m;
+    var windText = isNumber(w) && w >= 0 && unitOk(units, "wind_speed_10m", "km/h") ? formatOneDecimal(w) + NBSP + "km/h" : NA;
+    setValue(el.wind, windText);
+    used.wind_speed_10m = windText === NA ? null : w;
+
+    // Stand
+    var ct = parseLocalTime(current && current.time);
+    var tzOk = !data || data.timezone === undefined || data.timezone === "Europe/Berlin";
+    el.time.textContent = ct && tzOk ? ct.date + ", " + ct.hm + NBSP + "Uhr" : NA;
+    used.time = ct && tzOk ? current.time : null;
+
+    // Niederschlag: Eintrag in hourly.time mit gleichem Datum und gleicher Stunde wie current.time
+    var precipText = NA, hourText = "";
+    var times = hourly && hourly.time, probs = hourly && hourly.precipitation_probability;
+    if (ct && Array.isArray(times) && Array.isArray(probs) && times.length === probs.length && unitOk(hourlyUnits, "precipitation_probability", "%")) {
+      var idx = -1;
+      for (var i = 0; i < times.length; i++) {
+        var ht = parseLocalTime(times[i]);
+        if (ht && ht.hourKey === ct.hourKey) { idx = i; break; }
+      }
+      if (idx !== -1) {
+        var p = probs[idx];
+        hourText = "Stundenwert " + ct.hour + ":00" + NBSP + "Uhr";
+        if (isNumber(p) && p >= 0 && p <= 100) {
+          precipText = fmtInteger.format(p) + NBSP + "%";
+          used.precipitation_probability = { index: idx, time: times[idx], value: p };
+        }
+      }
+    }
+    setValue(el.precip, precipText);
+    el.precipHour.textContent = hourText;
+    if (!used.precipitation_probability) used.precipitation_probability = null;
+
+    setState("ok");
+    el.status.textContent = "Wetterdaten geladen. Temperatur " + tempText + ", Niederschlagswahrscheinlichkeit " + precipText +
+      (hourText ? " (" + hourText + ")" : "") + ", Wind " + windText + ". Stand " + el.time.textContent + ".";
+
+    // Für das Protokoll: welche Werte aus der Antwort angezeigt werden.
+    if (window.console && console.info) console.info("[ELBRAD] Open-Meteo-Werte angezeigt:", used);
+  }
+
+  var requestId = 0;
+  function loadWeather() {
+    var id = ++requestId;
+    setState("loading");
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = setTimeout(function () { if (controller) controller.abort(); }, TIMEOUT_MS);
+
+    fetch(WEATHER_URL, { cache: "no-store", signal: controller ? controller.signal : undefined })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json().catch(function () { throw new Error("Antwort ist kein gültiges JSON"); });
+      })
+      .then(function (data) {
+        if (id !== requestId) return;
+        render(data);
+      })
+      .catch(function (err) {
+        if (id !== requestId) return;
+        var reason = err && err.name === "AbortError" ? "Zeitüberschreitung nach " + TIMEOUT_MS / 1000 + " s" : (err && err.message) || String(err);
+        if (window.console && console.warn) console.warn("[ELBRAD] Wetterdaten nicht geladen:", reason);
+        setState("error");
+      })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  el.retry.addEventListener("click", function () {
+    el.heading.focus();
+    loadWeather();
+  });
+
+  loadWeather();
+
+  /* ================= Buchungs-Demo ================= */
+  var dialog = document.getElementById("booking");
+  var form = document.getElementById("booking-form");
+  var result = document.getElementById("booking-result");
+  var lastTrigger = null;
+
+  function openBooking(trigger) {
+    lastTrigger = trigger;
+    result.textContent = "";
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    var checked = form.querySelector("input:checked") || form.querySelector("input");
+    checked.focus();
+  }
+  function closeBooking() {
+    if (typeof dialog.close === "function") dialog.close();
+    else { dialog.removeAttribute("open"); dialog.dispatchEvent(new Event("close")); }
+  }
+
+  document.querySelectorAll("[data-open-booking]").forEach(function (btn) {
+    btn.addEventListener("click", function () { openBooking(btn); });
+  });
+  document.querySelectorAll("[data-close-booking]").forEach(function (btn) {
+    btn.addEventListener("click", closeBooking);
+  });
+  dialog.addEventListener("click", function (e) { if (e.target === dialog) closeBooking(); });
+  dialog.addEventListener("close", function () { if (lastTrigger) lastTrigger.focus(); });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var choice = form.querySelector("input[name=bike]:checked");
+    if (!choice) {
+      result.textContent = "Bitte wähle zuerst ein Rad aus.";
+      form.querySelector("input").focus();
+      return;
+    }
+    result.textContent = "Deine Wahl: " + choice.value + " (" + choice.getAttribute("data-price").replace(/&nbsp;/g, NBSP) + "). Das ist nur eine Demo, es wurde nichts gebucht.";
+  });
+})();
+</script>
+</body>
+</html>
