@@ -1,24 +1,65 @@
-"""Builds index.html from src/template.html by embedding fonts and images as data URIs.
-Usage: python3 build.py"""
-import base64, pathlib
+"""Builds both versions of the ELBRAD page.
+
+  Version A  ->  index.html             (single file: fonts and images embedded)
+  Version B  ->  version-b/index.html   (images and fonts in version-b/assets/)
+
+The weather logic lives once in src/shared/weather.js and is inlined into both
+pages, so A and B fetch, validate and format the weather data identically.
+
+Usage: python3 build.py
+"""
+import base64
+import pathlib
+import shutil
 
 root = pathlib.Path(__file__).parent
-src = (root / "src/template.html").read_text(encoding="utf-8")
-assets = {
-    "FONT_BC800I": "src/fonts/barlow-condensed-latin-800-italic.woff2",
-    "FONT_BC700": "src/fonts/barlow-condensed-latin-700-normal.woff2",
-    "FONT_B400": "src/fonts/barlow-latin-400-normal.woff2",
-    "FONT_B600": "src/fonts/barlow-latin-600-normal.woff2",
-    "IMG_HERO": "src/img/hero.jpg",
-    "IMG_CITY": "src/img/citybike.jpg",
-    "IMG_EBIKE": "src/img/ebike.jpg",
-    "IMG_TOUR": "src/img/tourenrad.jpg",
-}
-for key, rel in assets.items():
-    path = root / rel
-    mime = "font/woff2" if path.suffix == ".woff2" else "image/jpeg"
-    uri = f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
-    src = src.replace("{{%s}}" % key, uri)
-assert "{{" not in src, "unreplaced placeholder"
-(root / "index.html").write_text(src, encoding="utf-8")
-print("index.html written,", len(src) // 1024, "KB")
+weather_js = (root / "src/shared/weather.js").read_text(encoding="utf-8")
+
+
+def build_a():
+    src = (root / "src/template.html").read_text(encoding="utf-8")
+    src = src.replace("{{WEATHER_JS}}", weather_js)
+    assets = {
+        "FONT_BC800I": "src/fonts/barlow-condensed-latin-800-italic.woff2",
+        "FONT_BC700": "src/fonts/barlow-condensed-latin-700-normal.woff2",
+        "FONT_B400": "src/fonts/barlow-latin-400-normal.woff2",
+        "FONT_B600": "src/fonts/barlow-latin-600-normal.woff2",
+        "IMG_HERO": "src/img/hero.jpg",
+        "IMG_CITY": "src/img/citybike.jpg",
+        "IMG_EBIKE": "src/img/ebike.jpg",
+        "IMG_TOUR": "src/img/tourenrad.jpg",
+    }
+    for key, rel in assets.items():
+        path = root / rel
+        mime = "font/woff2" if path.suffix == ".woff2" else "image/jpeg"
+        uri = f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
+        src = src.replace("{{%s}}" % key, uri)
+    assert "{{" not in src, "unreplaced placeholder in Version A"
+    (root / "index.html").write_text(src, encoding="utf-8")
+    print("index.html", len(src) // 1024, "KB")
+
+
+def build_b():
+    src_dir = root / "src/version-b"
+    out_dir = root / "version-b"
+    html = (src_dir / "template.html").read_text(encoding="utf-8")
+    html = html.replace("{{WEATHER_JS}}", weather_js)
+    assert "{{" not in html, "unreplaced placeholder in Version B"
+    assets = out_dir / "assets"
+    if assets.exists():
+        shutil.rmtree(assets)
+    (assets / "img").mkdir(parents=True)
+    (assets / "fonts").mkdir(parents=True)
+    for f in sorted((src_dir / "img").glob("*")):
+        if f.suffix.lower() in (".jpg", ".webp", ".png", ".svg"):
+            shutil.copy2(f, assets / "img" / f.name)
+    for f in sorted((src_dir / "fonts").glob("*.woff2")):
+        shutil.copy2(f, assets / "fonts" / f.name)
+    (out_dir / "index.html").write_text(html, encoding="utf-8")
+    print("version-b/index.html", len(html) // 1024, "KB,",
+          len(list((assets / "img").iterdir())), "images")
+
+
+if __name__ == "__main__":
+    build_a()
+    build_b()
