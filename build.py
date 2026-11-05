@@ -40,24 +40,23 @@ def build_a():
 
 
 def build_b():
+    """Version B. Images are NOT generated or copied here: they live directly in
+    version-b/assets/img/ so they can be replaced by uploading files with the same names."""
     src_dir = root / "src/version-b"
     out_dir = root / "version-b"
     html = (src_dir / "template.html").read_text(encoding="utf-8")
     html = html.replace("{{WEATHER_JS}}", weather_js)
     assert "{{" not in html, "unreplaced placeholder in Version B"
-    assets = out_dir / "assets"
-    if assets.exists():
-        shutil.rmtree(assets)
-    (assets / "img").mkdir(parents=True)
-    (assets / "fonts").mkdir(parents=True)
-    for f in sorted((src_dir / "img").glob("*")):
-        if f.suffix.lower() in (".jpg", ".webp", ".png", ".svg"):
-            shutil.copy2(f, assets / "img" / f.name)
+    fonts = out_dir / "assets/fonts"
+    fonts.mkdir(parents=True, exist_ok=True)
     for f in sorted((src_dir / "fonts").glob("*.woff2")):
-        shutil.copy2(f, assets / "fonts" / f.name)
+        shutil.copy2(f, fonts / f.name)
+    missing = [n for n in IMAGES_B if not (out_dir / "assets/img" / n).exists()]
     (out_dir / "index.html").write_text(html, encoding="utf-8")
-    print("version-b/index.html", len(html) // 1024, "KB,",
-          len(list((assets / "img").iterdir())), "images")
+    print("version-b/index.html", len(html) // 1024, "KB", "| missing images: " + ", ".join(missing) if missing else "")
+
+
+IMAGES_B = ["citybike.jpg", "ebike.jpg", "tourenrad.jpg", "saddle.jpg", "handlebar.jpg", "waterfront.jpg"]
 
 
 if __name__ == "__main__":
