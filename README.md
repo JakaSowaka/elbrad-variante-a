@@ -8,6 +8,8 @@ Studienprojekt der Kunstschule Wandsbek, keine offizielle Seite.
 | A · Urban | `index.html` (single file, fonts and images embedded) | `/elbrad-variante-a/` |
 | B · Industrial | `version-b/index.html` (images and fonts in `version-b/assets/`) | `/elbrad-variante-a/version-b/` |
 
+Version B also has its own repository, [elbrad-variante-b](https://github.com/JakaSowaka/elbrad-variante-b), with the same page at its root. When you change Version B or `src/shared/weather.js`, change both copies.
+
 ## Live weather (both versions)
 
 The "Hamburg heute" section loads current data from [Open-Meteo](https://open-meteo.com/) on every page load. The logic exists once, in `src/shared/weather.js` (function `loadWeather()`), and `build.py` inlines it into both pages, so both versions behave the same:
